@@ -63,12 +63,15 @@ def processPoints(cnt, img):
 	dest = get_transformed_img(img, list(inP1), list(inP2), list(inP3), outP1, outP2, outP3)
 	
 	cnt = getContours(dest)
-	generate_graph(dest, outP1[0], outP3[0], outP1[1], outP2[1], "graph_middle_pattern.png")
+	generate_graph(dest, outP1[0], outP3[0], outP1[1], outP2[1], "graph_mid_pattern.png")
+	
 	minYFirstPattern = topPointsProcessFirstPattern(cnt, dest)
 	maxYFirstPattern = botPointsProcessFirstPattern(outP1 ,cnt, dest)
 	generate_graph(dest, outP1[0], outP3[0], minYFirstPattern, maxYFirstPattern, "gaph_top_pattern.png")
 	
-	minYSecondPattern = botPointsProcessSecondPattern(outP2 ,cnt, dest)
+	minYSecondPattern = topPointsProcessSecondPattern(outP2 ,cnt, dest)
+	maxYSecondPattern = botPointsProcessSecondPattern(outP2 ,cnt, dest)
+	generate_graph(dest, outP1[0], outP3[0], minYSecondPattern, maxYSecondPattern, "gaph_bot_pattern.png")
 	
 	saveImage("transformed_image.png", dest) # save image
 	# Finally draw the line in the original image
@@ -76,43 +79,59 @@ def processPoints(cnt, img):
 	cv2.line(img, tPoint1, tPoint2, 255, 1)
 	cv2.line(img, lPoint1, lPoint2, 255, 1)
 	cv2.line(img, rPoint1, rPoint2, 255, 1)
-	
-def topPointsProcessFirstPattern(cnt, img):
-	tmpMinY = len(img)
-	tmpX = 0
-	for contour in cnt:#[1:]:
-		xtmp, ytmp = topMostPoint = topMost(contour)
-		if ytmp>1:
-			tmpMinY = min(tmpMinY, ytmp)
-			tmpX = xtmp
-	# cv2.circle(img, (tmpX, tmpMinY), 1, 250)
-	
-	return tmpMinY
-	
-def botPointsProcessFirstPattern(point, cnt, img):
-	tmpMinY = 0
-	tmpMinX = 0
-	for contour in cnt[1:]:
-		xtmp, ytmp = botMostPoint = bottomMost(contour)
-		if point[1]>ytmp:
-			tmpMinY = max(tmpMinY, ytmp)
-			tmpMinX = xtmp
-	# cv2.circle(img, (tmpMinX, tmpMinY), 1, 250)
-	return tmpMinY
-	
-def botPointsProcessSecondPattern(point, cnt, img):
-	tmpMinY = len(img)
-	tmpMinX = 0
-	print point
-	for contour in cnt[1:]:
-		xtmp, ytmp = botMostPoint = bottomMost(contour)
-		print xtmp, ytmp
-		if point[1]<ytmp:
-			tmpMinY = min(tmpMinY, ytmp)
-			tmpMinX = xtmp
-	print (tmpMinX, tmpMinY)
-	cv2.circle(img, (tmpMinX, tmpMinY), 1, 250)
-	return tmpMinY
+
+##### CODIGO DUPLICADO												####Duplicado: Mejorar codigo
+                                                                    ####Duplicado: Mejorar codigo
+def topPointsProcessFirstPattern(cnt, img):                         ####Duplicado: Mejorar codigo
+	tmpMinY = len(img)                                              ####Duplicado: Mejorar codigo
+	tmpX = 0                                                        ####Duplicado: Mejorar codigo
+	for contour in cnt:#[1:]:                                       ####Duplicado: Mejorar codigo
+		xtmp, ytmp = topMostPoint = topMost(contour)                ####Duplicado: Mejorar codigo
+		if ytmp>1 and ytmp==min(tmpMinY, ytmp):                     ####Duplicado: Mejorar codigo
+			tmpMinY = min(tmpMinY, ytmp)                            ####Duplicado: Mejorar codigo
+			tmpX = xtmp                                             ####Duplicado: Mejorar codigo
+	# cv2.circle(img, (tmpX, tmpMinY), 1, 250)                      ####Duplicado: Mejorar codigo
+	                                                                ####Duplicado: Mejorar codigo
+	return tmpMinY                                                  ####Duplicado: Mejorar codigo
+	                                                                ####Duplicado: Mejorar codigo
+def topPointsProcessSecondPattern(point, cnt, img):                 ####Duplicado: Mejorar codigo
+	tmpMinY = len(img)                                              ####Duplicado: Mejorar codigo
+	tmpMinX = 0                                                     ####Duplicado: Mejorar codigo
+	print point                                                     ####Duplicado: Mejorar codigo
+	for contour in cnt:#[1:]:                                       ####Duplicado: Mejorar codigo
+		xtmp, ytmp = botMostPoint = topMost(contour)                ####Duplicado: Mejorar codigo
+		if point[1]<ytmp and ytmp==min(tmpMinY, ytmp):              ####Duplicado: Mejorar codigo
+			tmpMinY = min(tmpMinY, ytmp)                            ####Duplicado: Mejorar codigo
+			tmpMinX = xtmp                                          ####Duplicado: Mejorar codigo
+	print tmpMinX, tmpMinY                                          ####Duplicado: Mejorar codigo
+	cv2.circle(img, (tmpMinX, tmpMinY), 1, 250)                     ####Duplicado: Mejorar codigo
+	return tmpMinY                                                  ####Duplicado: Mejorar codigo
+	                                                                ####Duplicado: Mejorar codigo
+def botPointsProcessFirstPattern(point, cnt, img):                  ####Duplicado: Mejorar codigo
+	tmpMaxY = 0                                                     ####Duplicado: Mejorar codigo
+	tmpMaxX = 0                                                     ####Duplicado: Mejorar codigo
+	for contour in cnt:#[1:]:                                       ####Duplicado: Mejorar codigo
+		xtmp, ytmp = botMostPoint = bottomMost(contour)             ####Duplicado: Mejorar codigo
+		if point[1]>ytmp and ytmp==max(tmpMaxY, ytmp):              ####Duplicado: Mejorar codigo
+			tmpMaxY = max(tmpMaxY, ytmp)                            ####Duplicado: Mejorar codigo
+			tmpMaxX = xtmp                                          ####Duplicado: Mejorar codigo
+	# cv2.circle(img, (tmpMinX, tmpMinY), 1, 250)                   ####Duplicado: Mejorar codigo
+	return tmpMaxY                                                  ####Duplicado: Mejorar codigo
+	                                                                ####Duplicado: Mejorar codigo
+def botPointsProcessSecondPattern(point, cnt, img):                 ####Duplicado: Mejorar codigo
+	tmpMinY = len(img)                                              ####Duplicado: Mejorar codigo
+	tmpMinX = 0                                                     ####Duplicado: Mejorar codigo
+	# print point                                                   ####Duplicado: Mejorar codigo
+	for contour in cnt:#[1:]:                                       ####Duplicado: Mejorar codigo
+		xtmp, ytmp = botMostPoint = bottomMost(contour)             ####Duplicado: Mejorar codigo
+		# cv2.circle(img, (xtmp, ytmp), 1, 250)                     ####Duplicado: Mejorar codigo
+		# print xtmp, ytmp                                          ####Duplicado: Mejorar codigo
+		if point[1]+errorPixels<ytmp and ytmp==min(tmpMinY, ytmp):  ####Duplicado: Mejorar codigo
+			tmpMinY = min(tmpMinY, ytmp)                            ####Duplicado: Mejorar codigo
+			tmpMinX = xtmp                                          ####Duplicado: Mejorar codigo
+	# print (tmpMinX, tmpMinY)                                      ####Duplicado: Mejorar codigo
+	# cv2.circle(img, (tmpMinX, tmpMinY), 3, 250)                   ####Duplicado: Mejorar codigo
+	return tmpMinY                                                  ####Duplicado: Mejorar codigo
 	
 def generate_graph(img, xStart, xEnd, yStart, yEnd, name):
 	avgGreyScale = []
