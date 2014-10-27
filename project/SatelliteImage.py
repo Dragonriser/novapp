@@ -14,8 +14,9 @@ class SatelliteImage:
 
     # Attributes
     currentImage = None
-    transformedSatelliteImage = None
     imageContours = None
+    transformedSatelliteImage = None
+    transformedImageContours = None
 
     topPatternPointsTransformed = {TOP_LEFT: None, TOP_RIGHT: None, BOT_LEFT: None, BOT_RIGHT: None}
     midPatternPointsTransformed = {TOP_LEFT: None, TOP_RIGHT: None, BOT_LEFT: None, BOT_RIGHT: None}
@@ -27,7 +28,7 @@ class SatelliteImage:
     lftContourPoints = []
 
     def __init__(self, imageobject):
-        self.currentImage = imageobject
+        self.currentImage = cv2.imread(imageobject, cv2.CV_LOAD_IMAGE_GRAYSCALE)  # open image in grayscale format
 
     def get_width(self):
         return self.currentImage.shape[1]
@@ -36,15 +37,15 @@ class SatelliteImage:
         return self.currentImage.shape[0]
 
     def calculate_contours(self):
-        for iCurrent in [self.currentImage, self.transformedSatelliteImage]:
-            if not iCurrent:
+        for iCurrent in [(self.currentImage, self.imageContours), (self.transformedSatelliteImage,self.transformedImageContours)]:
+            if not iCurrent[0]:
                 # imgGray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
                 # ret, thresh = cv2.threshold(imgGray, 127, 255, cv2.THRESH_BINARY)
-                ret, thresh = cv2.threshold(self.currentImage, 127, 255, cv2.THRESH_BINARY)
+                ret, thresh = cv2.threshold(iCurrent[0], 127, 255, cv2.THRESH_BINARY)
                 Logger.save_image('black_and_white_image.png', thresh)
-                self.imageContours, hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+                iCurrent[1], hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
 
-                for contour in self.imageContours[1:]:
+                for contour in iCurrent[1][1:]:
                     self.__get_contour_bot_points(contour)
                     self.__get_contour_top_points(contour)
                     self.__get_contour_rgt_points(contour)
@@ -80,7 +81,7 @@ class SatelliteImage:
         self.lftContourPoints.append(tuple(contour[contour[:, :, 0].argmin()][0]))
 
     def get_pixel(self, x, y):
-        return self.currentImage[x][y]
+        return self.currentImage[y][x]
 
     def get_transformed_pixel(self, x, y):
-        return self.transformedSatelliteImage[x][y]
+        return self.transformedSatelliteImage[y][x]

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from ExceptionManager import new_exception
+from SatelliteImage import SatelliteImage
 import os.path
 import Logger
 
@@ -20,6 +21,7 @@ class ImageProcessor:
         else:
             self.source_file_path = source_file_path
             #llamar al modulo de image
+
 
     #Methods
     def start_processing(self):
