@@ -40,11 +40,18 @@ class ImageTransformer:
         # inP4 = ImageTransformer.line_intersection(bPoint1, bPoint2, rPoint1, rPoint2)  # BOT RIGHT
 
         # CALCULANDO LA IMAGEN TRANSFORMADA
-        self.imageToTransform.transformedSatelliteImage = ImageTransformer.__get_transformed_img(self.imageToTransform, list(inP1), list(inP2), list(inP3), outP1, outP2, outP3)
+
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_LEFT] = inP1                   # TOP LEFT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_LEFT] = [inP1[0], inP2[1]]     # BOT LEFT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_RIGHT] = [inP3[0], inP1[1]]    # TOP RIGHT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_RIGHT] = [inP2[0], inP3[1]]    # BOT RIGHT
+        self.imageToTransform.transformedSatelliteImage = ImageTransformer.__get_transformed_img(self.imageToTransform,
+                                                                                                 list(inP1),
+                                                                                                 list(inP2),
+                                                                                                 list(inP3),
+                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_LEFT],
+                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_LEFT],
+                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_RIGHT])
 
     def __filter_bot_points(self):
         """

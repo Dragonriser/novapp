@@ -10,7 +10,8 @@ __author__ = 'emontenegro'
 class ImageProcessor:
     #Attributes
     source_file_path = None
-    error_pixels = 6
+    error_pixels =
+    imageOriginal = None
 
     #Constructor
     def __init__(self, source_file_path):
@@ -21,11 +22,12 @@ class ImageProcessor:
         else:
             self.source_file_path = source_file_path
             #llamar al modulo de image
-
+            self.imageOriginal = SatelliteImage(self.source_file_path)
 
     #Methods
     def start_processing(self):
-        pass
+        self.imageOriginal.calculate_contours()
+
 
     def save_image_metadata(self):
         pass
