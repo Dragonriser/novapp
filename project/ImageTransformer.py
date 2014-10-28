@@ -1,8 +1,8 @@
 import cv2
-from ImageProcessor import ImageProcessor
 import numpy as np
 import math
 from SatelliteImage import SatelliteImage
+import Logger
 
 __author__ = 'emontenegro'
 
@@ -10,13 +10,15 @@ __author__ = 'emontenegro'
 class ImageTransformer:
     # Attributes
     imageToTransform = None
+    error_pixels = 0
 
-    def __init__(self, imageobject):
+    def __init__(self, imageobject, errorpixels):
         """
 
         :param imageobject:
         """
         self.imageToTransform = imageobject
+        self.error_pixels = errorpixels
 
     def transform_image(self):
         """
@@ -25,33 +27,44 @@ class ImageTransformer:
         """
         # obtengo los contornos que serviran para la tansformacion
         self.imageToTransform.calculate_contours()
+
         # imgContours = self.imageToTransform.ImageContours
         filteredTopMostPoints, topLine, tPoint1, tPoint2 = self.__filter_top_points()
         filteredBotMostPoints, botLine, bPoint1, bPoint2 = self.__filter_bot_points()
 
-        leftMostPoint = self.__filter_lft_points()
-        rightMostPoint = self.__filter_rgt_points()
+        # print filteredTopMostPoints
+        # print filteredBotMostPoints
+
+        leftMostPoint = self.__filter_lft_points(filteredBotMostPoints[0], filteredTopMostPoints[0])
+        rightMostPoint = self.__filter_rgt_points(filteredBotMostPoints[len(filteredBotMostPoints)-1], filteredTopMostPoints[len(filteredTopMostPoints)-1])
+
+        # print leftMostPoint
+        # print rightMostPoint
+
+        [vx, vy, x, y] = topLine
+
         # filtrar los puntos de top bot rgt lft de los contornos
-        lPoint1, lPoint2 = self.__get_lft_line(filteredBotMostPoints[0], filteredTopMostPoints[0])
-        rPoint1, rPoint2 = self.__get_rgt_line(filteredBotMostPoints[len(filteredBotMostPoints)-1], filteredTopMostPoints[len(filteredTopMostPoints)-1])
+        rPoint1, rPoint2 = self.__get_rgt_line(rightMostPoint, vx, vy)
+        lPoint1, lPoint2 = self.__get_lft_line(leftMostPoint, vx, vy)
+
         inP1 = ImageTransformer.line_intersection(tPoint1, tPoint2, lPoint1, lPoint2)  # TOP LEFT
         inP2 = ImageTransformer.line_intersection(bPoint1, bPoint2, lPoint1, lPoint2)  # BOT LEFT
         inP3 = ImageTransformer.line_intersection(tPoint1, tPoint2, rPoint1, rPoint2)  # TOP RIGHT
         # inP4 = ImageTransformer.line_intersection(bPoint1, bPoint2, rPoint1, rPoint2)  # BOT RIGHT
 
         # CALCULANDO LA IMAGEN TRANSFORMADA
-
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_LEFT] = inP1                   # TOP LEFT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_LEFT] = [inP1[0], inP2[1]]     # BOT LEFT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_RIGHT] = [inP3[0], inP1[1]]    # TOP RIGHT
         self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_RIGHT] = [inP2[0], inP3[1]]    # BOT RIGHT
-        self.imageToTransform.transformedSatelliteImage = ImageTransformer.__get_transformed_img(self.imageToTransform,
-                                                                                                 list(inP1),
-                                                                                                 list(inP2),
-                                                                                                 list(inP3),
-                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_LEFT],
-                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_LEFT],
-                                                                                                 self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_RIGHT])
+
+        self.imageToTransform.transformedSatelliteImage = self.__get_transformed_img(list(inP1),
+                                                                                     list(inP2),
+                                                                                     list(inP3),
+                                                                                     self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_LEFT],
+                                                                                     self.imageToTransform.midPatternPointsTransformed[SatelliteImage.BOT_LEFT],
+                                                                                     self.imageToTransform.midPatternPointsTransformed[SatelliteImage.TOP_RIGHT])
+        Logger.save_image("transformed_image.png", self.imageToTransform.transformedSatelliteImage)  # save image
 
     def __filter_bot_points(self):
         """
@@ -70,7 +83,7 @@ class ImageTransformer:
 
         filteredbotmostpoints = [list(point) for point in filteredbotmostpoints
                                     if (abs(point[1]-botmostpointmaxy) < abs(imagemiddle-point[1]))
-                                    and abs(point[1]-botmostpointmaxy) < ImageProcessor.error_pixels]
+                                    and abs(point[1]-botmostpointmaxy) < self.error_pixels]
         filteredbotmostpoints = sorted(filteredbotmostpoints, key=lambda point: point[0])
 
         [vx, vy, x, y] = cv2.fitLine(np.float32(filteredbotmostpoints), cv2.cv.CV_DIST_L12, 0, 0.01, 0.01)
@@ -105,14 +118,14 @@ class ImageTransformer:
 
         filteredtopmostpoints = [list(point) for point in filteredtopmostpoints
                                  if (abs(point[1]-topmostpointminy) < abs(imagemiddle-point[1]))
-                                 and abs(point[1]-topmostpointminy)<ImageProcessor.error_pixels]
+                                 and abs(point[1]-topmostpointminy) < self.error_pixels]
         filteredtopmostpoints = sorted(filteredtopmostpoints, key=lambda point: point[0])
 
         [vx, vy, x, y] = cv2.fitLine(np.float32(filteredtopmostpoints), cv2.cv.CV_DIST_L12, 0, 0.01, 0.01)
         # Now find two extreme points on the line to draw line
 
         lefty = int((-x*vy/vx) + y)
-        righty = int(((self.imageToTransform.get_height()-x)*vy/vx)+y)
+        righty = int(((self.imageToTransform.get_width()-x)*vy/vx)+y)
 
         # for point in filteredTopMostPoints:
             # print "The point is %s" % (point,)
@@ -138,12 +151,15 @@ class ImageTransformer:
         :param pointTop:
         :return:
         """
+
         filteredleftmostpoints = sorted(self.imageToTransform.lftContourPoints, key=lambda point: point[0])
+
+        leftpointreturn = filteredleftmostpoints[0]
 
         shortestdistancetop = math.sqrt(math.pow(pointTop[0]-filteredleftmostpoints[0][0], 2)+math.pow(pointTop[1]-filteredleftmostpoints[0][1], 2))
         shortestdistancebot = math.sqrt(math.pow(pointBot[0]-filteredleftmostpoints[0][0], 2)+math.pow(pointBot[1]-filteredleftmostpoints[0][1], 2))
 
-        for pointEvaluated in filteredleftmostpoints:
+        for pointEvaluated in filteredleftmostpoints[1:]:
             shortestdistancetoptmp = math.sqrt(math.pow(pointTop[0]-pointEvaluated[0], 2)+math.pow(pointTop[1]-pointEvaluated[1], 2))
             shortestdistancebottmp = math.sqrt(math.pow(pointBot[0]-pointEvaluated[0], 2)+math.pow(pointBot[1]-pointEvaluated[1], 2))
 
@@ -170,11 +186,12 @@ class ImageTransformer:
         :return:
         """
         filteredrightmostpoints = sorted(self.imageToTransform.rgtContourPoints, key=lambda point: point[0], reverse=True)
+        rightpointreturn = None
 
         shortestdistancetop = math.sqrt(math.pow(pointTop[0]-filteredrightmostpoints[0][0], 2)+math.pow(pointTop[1]-filteredrightmostpoints[0][1], 2))
         shortestdistancebot = math.sqrt(math.pow(pointBot[0]-filteredrightmostpoints[0][0], 2)+math.pow(pointBot[1]-filteredrightmostpoints[0][1], 2))
 
-        for pointEvaluated in filteredrightmostpoints:
+        for pointEvaluated in filteredrightmostpoints[1:]:
             shortestdistancetoptmp = math.sqrt(math.pow(pointTop[0]-pointEvaluated[0], 2)+math.pow(pointTop[1]-pointEvaluated[1], 2))
             shortestdistancebottmp = math.sqrt(math.pow(pointBot[0]-pointEvaluated[0], 2)+math.pow(pointBot[1]-pointEvaluated[1], 2))
 
@@ -197,8 +214,8 @@ class ImageTransformer:
         # Obteniendo la linea izquierda
         # X = (Y-Y0)* -(1/M)+ X0 recta inversa
         topX = int(((0-leftMostPoint[1])*vy/-vx) + leftMostPoint[0])
-        botX = int(((self.imageToTransform.get_height(self)-1-leftMostPoint[1])*vy/-vx) + leftMostPoint[0])
-        lPoint1 = (botX, self.imageToTransform.get_height(self)-1)
+        botX = int(((self.imageToTransform.get_height()-1-leftMostPoint[1])*vy/-vx) + leftMostPoint[0])
+        lPoint1 = (botX, self.imageToTransform.get_height()-1)
         lPoint2 = (topX, 0)
         return lPoint1, lPoint2
 
@@ -206,8 +223,8 @@ class ImageTransformer:
         # Obteniendo la linea derecha
         # X = (Y-Y0)* -(1/M)+ X0 recta inversa
         topX = int(((0-rightMostPoint[1])*vy/-vx) + rightMostPoint[0])
-        botX = int(((self.imageToTransform.get_height(self)-1-rightMostPoint[1])*vy/-vx) + rightMostPoint[0])
-        rPoint1 = (botX, self.imageToTransform.get_height(self)-1)
+        botX = int(((self.imageToTransform.get_height()-1-rightMostPoint[1])*vy/-vx) + rightMostPoint[0])
+        rPoint1 = (botX, self.imageToTransform.get_height()-1)
         rPoint2 = (topX, 0)
         return rPoint1, rPoint2
 
@@ -231,6 +248,5 @@ class ImageTransformer:
     def __get_transformed_img(self, inP1, inP2, inP3, outP1, outP2, outP3):
         pts1 = np.float32([inP1,  inP2,  inP3])
         pts2 = np.float32([outP1, outP2, outP3])
-        M = cv2.getAffineTransform(pts1, pts2)
-        dest = cv2.warpAffine(self.imageToTransform, M, (self.imageToTransform.get_width(), self.imageToTransform.get_height()))
-        return dest
+        matrix = cv2.getAffineTransform(pts1, pts2)
+        return cv2.warpAffine(self.imageToTransform.currentImage, matrix, (self.imageToTransform.get_width(), self.imageToTransform.get_height()))

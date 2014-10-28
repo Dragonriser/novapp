@@ -35,7 +35,7 @@ def processPoints(cnt, img):
 	rightMostPoint = rightPointsProcess(cnt, img, filteredBottomMostPoints[len(filteredBottomMostPoints)-1], filteredTopMostPoints[len(filteredTopMostPoints)-1])
 	
 	[vx,vy,x,y] = topLine
-	
+
 	# Obteniendo la linea izquierda
 	# X = (Y-Y0)* -(1/M)+ X0 recta inversa
 	topX = int(((			 -leftMostPoint[1])*vy/-vx) + leftMostPoint[0])
@@ -61,7 +61,6 @@ def processPoints(cnt, img):
 	outP3 = [inP3[0], inP1[1]] # TOP RIGHT
 	
 	dest = get_transformed_img(img, list(inP1), list(inP2), list(inP3), outP1, outP2, outP3)
-	
 	cnt = getContours(dest)
 	generate_graph(dest, outP1[0], outP3[0], outP1[1], outP2[1], "graph_mid_pattern.png")
 	
@@ -201,12 +200,13 @@ def rightPointsProcess(cnt, img, pointBot, pointTop):
 
 def leftPointsProcess(cnt, img, pointBot, pointTop):
 	filteredLeftMostPoints = []
-	leftPointReturn = 0
 	for contour in cnt[1:]:
 		leftMostPoint = leftMost(contour)
 		filteredLeftMostPoints.append(leftMostPoint)
 		
 	filteredLeftMostPoints = sorted(filteredLeftMostPoints, key=lambda point: point[0])
+	leftPointReturn = filteredLeftMostPoints[0]
+	
 	
 	shortestDistanceTop = math.sqrt(math.pow(pointTop[0]-filteredLeftMostPoints[0][0], 2)+math.pow(pointTop[1]-filteredLeftMostPoints[0][1], 2))
 	shortestDistanceBot = math.sqrt(math.pow(pointBot[0]-filteredLeftMostPoints[0][0], 2)+math.pow(pointBot[1]-filteredLeftMostPoints[0][1], 2))

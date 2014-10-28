@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from ExceptionManager import new_exception
 from SatelliteImage import SatelliteImage
+from ImageTransformer import ImageTransformer
+from GraphGenerator import GraphGenerator
 import os.path
 import Logger
 
@@ -10,8 +12,10 @@ __author__ = 'emontenegro'
 class ImageProcessor:
     #Attributes
     source_file_path = None
-    error_pixels =
+    error_pixels = 6
     imageOriginal = None
+    imageTransformer = None
+    graphGenerator = None
 
     #Constructor
     def __init__(self, source_file_path):
@@ -26,8 +30,10 @@ class ImageProcessor:
 
     #Methods
     def start_processing(self):
-        self.imageOriginal.calculate_contours()
-
+        self.imageTransformer = ImageTransformer(self.imageOriginal, self.error_pixels)
+        self.imageTransformer.transform_image()
+        self.graphGenerator = GraphGenerator(self.imageOriginal, self.error_pixels)
+        self.graphGenerator.calculate_graphs()
 
     def save_image_metadata(self):
         pass
