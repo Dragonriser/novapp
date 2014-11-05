@@ -15,28 +15,30 @@ class GraphGenerator:
     def calculate_graphs(self):
         self.currentImage.calculate_contours()
 
-        self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
-                            self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_RIGHT][0],
-                            self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][1],
-                            self.currentImage.midPatternPointsTransformed[self.currentImage.BOT_LEFT][1],
-                            "graph_mid_pattern.png")
+        mid_pattern = self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
+                                          self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_RIGHT][0],
+                                          self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][1],
+                                          self.currentImage.midPatternPointsTransformed[self.currentImage.BOT_LEFT][1],
+                                          "graph_mid_pattern.png")
 
         minYFirstPattern = self.topPointsProcessFirstPattern(1)
         maxYFirstPattern = self.botPointsProcessFirstPattern(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][1])
 
-        self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
-                            self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_RIGHT][0],
-                            minYFirstPattern,
-                            maxYFirstPattern,
-                            "gaph_top_pattern.png")
+        top_pattern =self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
+                                         self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_RIGHT][0],
+                                         minYFirstPattern,
+                                         maxYFirstPattern,
+                                         "gaph_top_pattern.png")
 
         minYSecondPattern = self.topPointsProcessSecondPattern(self.currentImage.midPatternPointsTransformed[self.currentImage.BOT_LEFT][1])
         maxYSecondPattern = self.botPointsProcessSecondPattern(self.currentImage.midPatternPointsTransformed[self.currentImage.BOT_LEFT][1])
-        self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
+        bot_pattern = self.generate_graph(self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_LEFT][0],
                             self.currentImage.midPatternPointsTransformed[self.currentImage.TOP_RIGHT][0],
                             minYSecondPattern,
                             maxYSecondPattern,
                             "gaph_bot_pattern.png")
+
+        return top_pattern, mid_pattern, bot_pattern
 
         # Finally draw the line in the original image
         # cv2.line(img, bPoint1, bPoint2, 255, 1)
@@ -57,6 +59,7 @@ class GraphGenerator:
         graphPlot = figurePlot.add_subplot(111)
         graphPlot.plot(avgGreyScale)
         figurePlot.savefig(Logger.outputDirectory+name)
+        return Logger.outputDirectory+name
 
     def topPointsProcessFirstPattern(self, yCoordRef):
         tmpMinY = self.currentImage.get_height()

@@ -33,7 +33,7 @@ class ImageProcessor:
         self.imageTransformer = ImageTransformer(self.imageOriginal, self.error_pixels)
         self.imageTransformer.transform_image()
         self.graphGenerator = GraphGenerator(self.imageOriginal, self.error_pixels)
-        self.graphGenerator.calculate_graphs()
+        return self.graphGenerator.calculate_graphs()
 
     def save_image_metadata(self):
         pass
